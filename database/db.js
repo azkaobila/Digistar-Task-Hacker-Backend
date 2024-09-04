@@ -1,14 +1,16 @@
-
+require('dotenv').config();
 const mongoose = require('mongoose');
-const uri = "mongodb+srv://test:test@task.blakw.mongodb.net/?retryWrites=true&w=majority&appName=Task";
+const { userSchema } = require('./schema');
 
+const dbUrl = process.env.DB_URL;
+const dbName = process.env.DB_NAME;
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 
 // fucntion to test connection mongodb
 async function connectDB() {
     try {
         // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
-        await mongoose.connect(uri, clientOptions);
+        await mongoose.connect(`${dbUrl}/${dbName}`, clientOptions);
         await mongoose.connection.db.admin().command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch (err) {
@@ -20,7 +22,7 @@ async function connectDB() {
 async function closeDB() {
     try {
         await mongoose.connection.close();
-        console.log("MognoDB connection closed");
+        console.log("MongoDB connection closed");
         
     } catch (err) {
         console.log("MongoDB connection failed");

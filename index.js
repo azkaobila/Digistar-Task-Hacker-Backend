@@ -1,104 +1,112 @@
-const express = require('express');
+const http = require('http');
+const express = require('express');;
 const bodyParser = require('body-parser');
-const cors = require('cors');
 const db = require('./database/db');
 const query = require('./database/query');
+const authenticateToken = require('./middleware/jwtAuth'); 
 
-// inisialiasi aplikasi express
 const app = express();
 
-app.use(cors());
+const PORT = 3000;
+
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// inisialisasi port
-const PORT = 3000;
-
-// Connect ke MongoDB
 db.connectDB();
 
-// Rute utk GET semua user
-app.get('/users', async (req, res) => {
-    try {
-        const users = await query.getAllUsers();
-        res.status(200).json(users);
-    } catch (err) {
-        res.status(500).json({ message: 'Error mendapatkan data users', error: err });
+app.post('/register', (req, res) => {
+    const { name, age, email, password } = req.body;
+    if (!name || !age || !email || !password) {
+        return res.status(400).json({ message: 'Please provide all required fields' });
     }
+
+    query.registerUser({ name, age, email, password })
+        .then(user => res.status(201).json(user))
+        .catch(err => res.status(400).json({ message: err.message }));
 });
 
-// Rute untuk GET single user berdasarkan ID
-app.get('/users/:id', async (req, res) => {
-    try {
-        const user = await query.getUserById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(500).json({ message: 'Error mendapatkan data user', error: err });
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Please provide both email and password' });
     }
+
+    query.loginUser({ email, password })
+        .then(({ token, user }) => res.status(200).json({ token, user }))
+        .catch(err => res.status(400).json({ message: err.message }));
 });
 
-// Rute untuk GET SEARCH user berdasarkan nama
-app.get('/search', async (req, res) => {
-    const { name } = req.query;
-    if (!name) {
-        return res.status(400).json({ message: "Name query parameter is required" });
-    }
-    try {
-        const users = await query.searchUserByName(name);
-        res.status(200).json(users);
-    } catch (err) {
-        res.status(500).json({ message: 'Error mencari user', error: err });
-    }
+app.get('/users', authenticateToken, (req, res) => {
+    query.getAllUsers()
+        .then(users => res.status(200).json(users))
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
 });
 
-// Rute untuk POST CREATE user baru
-app.post('/users', async (req, res) => {
-    const user = req.body;
-    if (!user.name || !user.age) {
-        return res.status(400).json({ message: "Data user tidak lengkap. Nama dan umur harus diisi." });
-    }
-    try {
-        const newUser = await query.createUser(user);
-        res.status(201).json(newUser);
-    } catch (err) {
-        res.status(500).json({ message: 'Error membuat user baru', error: err });
-    }
+app.get('/users/email/:email', authenticateToken, (req, res) => {
+    const email = req.params.email;
+    query.getUserByEmail(email)
+        .then(user => {
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        })
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
 });
 
-// Rute untuk PUT UPDATE data user berdasarkan ID
-app.put('/users/:id', async (req, res) => {
-    const userUpdate = req.body;
-    if (!userUpdate.name && !userUpdate.age) {
-        return res.status(400).json({ message: "Data update user tidak valid. Nama atau umur harus diisi." });
-    }
-    try {
-        const updatedUser = await query.updateUser(req.params.id, userUpdate);
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
-        res.status(200).json(updatedUser);
-    } catch (err) {
-        res.status(500).json({ message: 'Error mengupdate user', error: err });
-    }
+app.get('/users/:id', authenticateToken, (req, res) => {
+    const id = req.params.id;
+    query.getUserById(id)
+        .then(user => {
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        })
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
 });
 
-// Rute untuk DELETE data user berdasarkan ID
-app.delete('/users/:id', async (req, res) => {
-    try {
-        const deletedUser = await query.deleteUser(req.params.id);
-        if (!deletedUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
-        res.status(200).json({ message: "User berhasil dihapus" });
-    } catch (err) {
-        res.status(500).json({ message: 'Error menghapus user', error: err });
+app.post('/users', authenticateToken, (req, res) => {
+    const { name, age } = req.body;
+    if (!name || !age) {
+        return res.status(400).json({ message: 'Please provide both name and age' });
     }
+
+    query.createUser({ name, age })
+        .then(user => res.status(201).json(user))
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
 });
 
-// Run server dan listen di port yang telah diinisialisasi
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.put('/users/:id', authenticateToken, (req, res) => {
+    const id = req.params.id;
+    const { name, age } = req.body;
+    query.updateUser(id, { name, age })
+        .then(updatedUser => {
+            if (updatedUser) {
+                res.status(200).json(updatedUser);
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        })
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
 });
+
+app.delete('/users/:id', authenticateToken, (req, res) => {
+    const id = req.params.id;
+    query.deleteUser(id)
+        .then(deletedUser => {
+            if (deletedUser) {
+                res.status(200).json({ message: 'User deleted successfully' });
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        })
+        .catch(err => res.status(500).json({ message: 'Internal Server Error' }));
+});
+
+app.listen(3000, () => {
+    console.log(`Server is running on port ${PORT}`);
+    });

@@ -7,8 +7,72 @@
 	},
 	"item": [
 		{
+			"name": "User Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Azka Obila\",\r\n  \"age\": 21,\r\n  \"email\": \"azka@example.com\",\r\n  \"password\": \"azka123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/register",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "User Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"azka@example.com\",\r\n  \"password\": \"azka123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/login",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get All User",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmQ4OGMxMDI4ZDQyZWYxNTIzYjU0MDEiLCJpYXQiOjE3MjU0Njc3MjgsImV4cCI6MTcyNTQ3MTMyOH0.pA-FS7trVF5VHZT_7mQr3OfBnTJQcPCxUP-DPX9yoxY",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [],
 				"url": {
@@ -25,19 +89,59 @@
 			"response": []
 		},
 		{
-			"name": "Get Single User",
+			"name": "Get Single User by Email",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmQ4OGMxMDI4ZDQyZWYxNTIzYjU0MDEiLCJpYXQiOjE3MjU0Njc3MjgsImV4cCI6MTcyNTQ3MTMyOH0.pA-FS7trVF5VHZT_7mQr3OfBnTJQcPCxUP-DPX9yoxY",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:3000/users/66d74d1e75c1af3815ba32e7",
+					"raw": "localhost:3000/users/email/john@example.com",
 					"host": [
 						"localhost"
 					],
 					"port": "3000",
 					"path": [
 						"users",
-						"66d74d1e75c1af3815ba32e7"
+						"email",
+						"john@example.com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Single User by ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmQ4OGMxMDI4ZDQyZWYxNTIzYjU0MDEiLCJpYXQiOjE3MjU0Njc3MjgsImV4cCI6MTcyNTQ3MTMyOH0.pA-FS7trVF5VHZT_7mQr3OfBnTJQcPCxUP-DPX9yoxY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/users/66d88e02f6687913fe20e2e5",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"users",
+						"66d88e02f6687913fe20e2e5"
 					]
 				}
 			},
